@@ -90,7 +90,7 @@ useEffect(()=>{
          return;
      }
 
-     let url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${import.meta.env.VITE_REACT_APP_NEWS_API}&page=${nextPage}&pageSize=${props.pageSize}`
+     let url = `/api/news?country=${props.country}&category=${props.category}&page=${nextPage}&pageSize=${props.pageSize}`
      setPage(nextPage)
      
     try {
