@@ -39,7 +39,7 @@ const updateNews=async ()=>{
         apiKey: import.meta.env.VITE_REACT_APP_NEWS_API,
         pageSize: props.pageSize,
     });
-    let url = `https://newsapi.org/v2/top-headlines?${params.toString()}`
+    let url = `/api/news?${params.toString()}`
     setLoading(true);
     try {
         let data = await fetch(url);
