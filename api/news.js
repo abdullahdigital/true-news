@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+const fetch = (await import('node-fetch')).default;
 
 export default async function handler(req, res) {
   const { country, category, page, pageSize } = req.query;
