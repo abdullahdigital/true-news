@@ -1,6 +1,6 @@
 // src/utils/cache.js
 
-export const setCache = (key, data, ttl = 300000) => {
+export const setCache = (key, data, ttl = 3600000) => {
   const now = new Date().getTime();
   const item = {
     data: data,

@@ -1,9 +1,10 @@
-import React, {useEffect,useState}from 'react'
-import NewsItems from './NewsItems.jsx'
-import { setCache, getCache } from '../utils/cache.js';
-import Spinner from './Spinner.jsx';
-import PropTypes from 'prop-types'
-import InfiniteScroll from "react-infinite-scroll-component";
+import React, { useEffect, useState } from 'react';
+import LoadingBar from 'react-top-loading-bar';
+import NewsItems from './NewsItems';
+import Spinner from './Spinner';
+import PropTypes from 'prop-types';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { setCache, getCache } from '../utils/cache';
 
 
 const News =(props)=>{
@@ -35,7 +36,7 @@ const updateNews=async ()=>{
     const params = new URLSearchParams({
         country: 'us',
         category: props.category,
-        apiKey: 'b4560369ea3b4e00a8c362d21168e376',
+        apiKey: import.meta.env.VITE_REACT_APP_NEWS_API,
         pageSize: props.pageSize,
     });
     let url = `https://newsapi.org/v2/top-headlines?${params.toString()}`
@@ -89,7 +90,7 @@ useEffect(()=>{
          return;
      }
 
-     let url = `https://newsapi.org/v2/top-headlines?country=us&category=${ props.category}&apiKey=b4560369ea3b4e00a8c362d21168e376&page=${nextPage}&pageSize=${ props.pageSize}`
+     let url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${import.meta.env.VITE_REACT_APP_NEWS_API}&page=${nextPage}&pageSize=${props.pageSize}`
      setPage(nextPage)
      
     try {
