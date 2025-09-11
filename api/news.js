@@ -1,6 +1,5 @@
-const fetch = (await import('node-fetch')).default;
-
 export default async function handler(req, res) {
+  const fetch = (await import('node-fetch')).default;
   const { country, category, page, pageSize } = req.query;
 
   const params = new URLSearchParams({
