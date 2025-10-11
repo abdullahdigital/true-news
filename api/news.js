@@ -1,33 +1,40 @@
-export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
-  const country = searchParams.get("country") || "us";
-  const category = searchParams.get("category") || "general";
-  const page = searchParams.get("page") || 1;
-  const pageSize = searchParams.get("pageSize") || 8;
+const cache = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-  const params = new URLSearchParams({
-    country,
-    category,
-    apiKey: process.env.NEWS_API_KEY,
-    page,
-    pageSize,
-  });
+export default async function handler(req, res) {
+  const { category = 'general', pageSize = 9, page = 1 } = req.query;
+  const NEWS_API_KEY = process.env.NEWS_API_KEY;
+  const NEWS_API_URL = 'https://newsapi.org/v2/top-headlines';
 
-  const url = `https://newsapi.org/v2/top-headlines?${params.toString()}`;
+  if (!NEWS_API_KEY) {
+    return res.status(500).json({ error: 'News API key is not configured.' });
+  }
+
+  const cacheKey = `${category}-${pageSize}-${page}`;
+  const cachedData = cache[cacheKey];
+
+  if (cachedData && (Date.now() - cachedData.timestamp < CACHE_DURATION)) {
+    return res.status(200).json(cachedData.data);
+  }
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(
+      `${NEWS_API_URL}?country=in&category=${category}&apiKey=${NEWS_API_KEY}&pageSize=${pageSize}&page=${page}`
+    );
     const data = await response.json();
 
-    return new Response(JSON.stringify(data), {
-      status: response.status,
-      headers: { "Content-Type": "application/json" },
-    });
+    if (response.ok) {
+      cache[cacheKey] = {
+        data: data,
+        timestamp: Date.now(),
+      };
+      res.status(200).json(data);
+    } else {
+      // Forward the error from NewsAPI
+      res.status(response.status).json(data);
+    }
   } catch (error) {
-    console.error("Error in serverless function:", error);
-    return new Response(
-      JSON.stringify({ status: "error", message: "Internal Server Error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    console.error('Error fetching news:', error);
+    res.status(500).json({ error: 'A server error occurred while fetching news.' });
   }
 }
