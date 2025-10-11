@@ -34,9 +34,8 @@ const updateNews=async ()=>{
     }
 
     const params = new URLSearchParams({
-        country: 'us',
+        country: props.country,
         category: props.category,
-        apiKey: import.meta.env.VITE_REACT_APP_NEWS_API,
         pageSize: props.pageSize,
     });
     let url = `/api/news?${params.toString()}`
@@ -90,7 +89,13 @@ useEffect(()=>{
          return;
      }
 
-     let url = `/api/news?country=${props.country}&category=${props.category}&page=${nextPage}&pageSize=${props.pageSize}`
+     const params = new URLSearchParams({
+         country: props.country,
+         category: props.category,
+         page: nextPage,
+         pageSize: props.pageSize,
+     });
+     let url = `/api/news?${params.toString()}`
      setPage(nextPage)
      
     try {
