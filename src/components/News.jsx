@@ -13,6 +13,7 @@ const News =(props)=>{
     const [page,setPage]= useState(1)
     const [totalResults,setTotalResults]= useState(0)
     const [apiError, setApiError] = useState(false)
+    const [noNews, setNoNews] = useState(false)
     
 const capitalizeFirstLetter=(string)=>{
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -22,6 +23,7 @@ const capitalizeFirstLetter=(string)=>{
 
 const updateNews=async ()=>{
      props.setProgress(0);
+
     const cacheKey = `news-${props.category}-page-1`;
     const cachedData = getCache(cacheKey);
 
@@ -37,20 +39,24 @@ const updateNews=async ()=>{
         country: props.country,
         category: props.category,
         pageSize: props.pageSize,
+        page: 1,
     });
-    let url = `/api/news?${params.toString()}`
+    const url = `https://newsapi.org/v2/top-headlines?${params.toString()}&apiKey=${import.meta.env.VITE_REACT_APP_NEWS_API}`;
     setLoading(true);
     try {
         let data = await fetch(url);
         props.setProgress(30);
         let parsedData = await data.json();
-        if (parsedData.status === 'error') {
-            console.error('News API Error:', parsedData.message);
+        if (parsedData.status !== 'ok') {
             setApiError(true);
         } else {
-            setArticles(parsedData.articles);
-            setTotalResults(parsedData.totalResults);
-            setCache(cacheKey, { articles: parsedData.articles, totalResults: parsedData.totalResults });
+            const list = Array.isArray(parsedData.articles) ? parsedData.articles : [];
+            setArticles(list);
+            setTotalResults(parsedData.totalResults || list.length);
+            setNoNews(list.length === 0);
+            if (list.length) {
+                setCache(cacheKey, { articles: list, totalResults: parsedData.totalResults || list.length });
+            }
         }
     } catch (error) {
         console.error('Error fetching news:', error);
@@ -89,25 +95,27 @@ useEffect(()=>{
          return;
      }
 
-     const params = new URLSearchParams({
-         country: props.country,
-         category: props.category,
-         page: nextPage,
-         pageSize: props.pageSize,
-     });
-     let url = `/api/news?${params.toString()}`
+    const params = new URLSearchParams({
+        country: props.country,
+        category: props.category,
+        page: nextPage,
+        pageSize: props.pageSize,
+    });
+    const url = `https://newsapi.org/v2/top-headlines?${params.toString()}&apiKey=${import.meta.env.VITE_REACT_APP_NEWS_API}`;
      setPage(nextPage)
      
     try {
         let data = await fetch(url);
         let parsedData = await data.json();
-        if (parsedData.status === 'error') {
-            console.error('News API Error (fetchMoreData):', parsedData.message);
+        if (parsedData.status !== 'ok') {
             setApiError(true);
         } else {
-            setArticles(articles.concat(parsedData.articles));
-            setTotalResults(parsedData.totalResults);
-            setCache(cacheKey, { articles: parsedData.articles, totalResults: parsedData.totalResults });
+            const list = Array.isArray(parsedData.articles) ? parsedData.articles : [];
+            setArticles(articles.concat(list));
+            setTotalResults(parsedData.totalResults || totalResults);
+            if (list.length) {
+                setCache(cacheKey, { articles: list, totalResults: parsedData.totalResults || totalResults });
+            }
         }
     } catch (error) {
         console.error('Error fetching more news:', error);
@@ -125,14 +133,19 @@ useEffect(()=>{
                         <p>Please try again later or upgrade your plan if you need more requests.</p>
                     </div>
                 )}
-                {!apiError && (
+                {!apiError && noNews && (
+                    <div className="text-center text-[var(--text-color)] text-lg my-8">
+                        <p>No news available for this category right now.</p>
+                    </div>
+                )}
+                {!apiError && !noNews && (
                 <InfiniteScroll
           dataLength={articles.length}
           next={fetchMoreData}
           hasMore={articles.length !== totalResults}
           loader={<Spinner/>}>
             <div className="container mx-auto px-4 py-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid-autofill gap-6">
                     {articles.map((element) => {
                         return (
                             <NewsItems key={element.url} title={element.title ? element.title : ""} description={element.description?element.description : ""} imageUrl={element.urlToImage} newsUrl={element.url} author={element.author} date={element.publishedAt} source={element.source.name} />
@@ -151,7 +164,7 @@ useEffect(()=>{
 
 News.defaultProps={
     showHeading: true,
-    country:'in',
+    country:'us',
     pageSize:8,
     category:'general',
 }

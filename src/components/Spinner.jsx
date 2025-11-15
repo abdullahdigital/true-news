@@ -1,14 +1,12 @@
 import React from 'react'
 import loading from './loading.gif'
 const  Spinner =()=>{
-
     return (
-      <div className='text-center'>
-        <img className='my-3' src={loading} alt="loading" />
+      <div role="status" aria-live="polite" className='text-center'>
+        <img className='my-3 mx-auto h-10 w-10' src={loading} alt="Loading" />
       </div>
     )
   }
-
 
 export default Spinner
 
